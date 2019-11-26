@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:experimental
+
 # Download wkhtmltopdf package stage
 FROM buildpack-deps:buster-curl as download
 
@@ -8,11 +10,14 @@ FROM debian:buster
 
 MAINTAINER Carlos Pavanetti <carlospavanetti.silvaprado@gmail.com>
 
-COPY --from=download wkhtmltox_0.12.5-1.buster_amd64.deb wkhtmltox_0.12.5-1.buster_amd64.deb
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends ./wkhtmltox_0.12.5-1.buster_amd64.deb  && \
+# Mount .deb package from early stage image
+RUN --mount=type=bind,from=download,target=wkhtmltox_0.12.5-1.buster_amd64.deb,source=wkhtmltox_0.12.5-1.buster_amd64.deb,rw \ 
+# Synchronize apt index, install wkhtmltopdf with required dependencies and remove index
+    apt-get update && \
+    apt-get install -y --no-install-recommends /wkhtmltox_0.12.5-1.buster_amd64.deb  && \
     rm -rf /var/lib/apt/lists/*
 
-ENTRYPOINT ["whtmltopdf"]
+# Define default command as help option for the entrypoint wkhtmltopdf
+ENTRYPOINT ["wkhtmltopdf"]
 CMD ["-h"]
 
